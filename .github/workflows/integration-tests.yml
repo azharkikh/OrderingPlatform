@@ -38,18 +38,15 @@ jobs:
       - name: Run integration tests
         run: dotnet test tests/IntegrationTests/IntegrationTests.csproj --logger "trx;LogFileName=results.trx"
 
-      - name: Stop services (triggers coverage flush)
-        if: always()
-        run: docker compose down --timeout 30
-
-      - name: Debug coverage files
+      - name: Flush coverage reports
         run: |
-          echo "=== Files in coverage-out ==="
-          ls -la coverage-out/
-          echo "=== Order coverage (first 20 lines) ==="
-          head -20 coverage-out/coverage.order.cobertura.xml || echo "File not found"
-          echo "=== Cart coverage (first 20 lines) ==="
-          head -20 coverage-out/coverage.cart.cobertura.xml || echo "File not found"
+          docker exec orderingplatform-order-1 dotnet-coverage shutdown order-session
+          docker exec orderingplatform-cart-1 dotnet-coverage shutdown cart-session
+          sleep 3
+
+      - name: Stop services
+        if: always()
+        run: docker compose down --timeout 10
 
       - name: Fix coverage-out permissions
         run: sudo chown -R $(id -u):$(id -g) coverage-out/
