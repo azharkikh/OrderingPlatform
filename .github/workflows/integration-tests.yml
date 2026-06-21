@@ -42,6 +42,15 @@ jobs:
         if: always()
         run: docker compose down --timeout 30
 
+      - name: Debug coverage files
+        run: |
+          echo "=== Files in coverage-out ==="
+          ls -la coverage-out/
+          echo "=== Order coverage (first 20 lines) ==="
+          head -20 coverage-out/coverage.order.cobertura.xml || echo "File not found"
+          echo "=== Cart coverage (first 20 lines) ==="
+          head -20 coverage-out/coverage.cart.cobertura.xml || echo "File not found"
+
       - name: Fix coverage-out permissions
         run: sudo chown -R $(id -u):$(id -g) coverage-out/
 

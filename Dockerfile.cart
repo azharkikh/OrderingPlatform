@@ -34,4 +34,4 @@ EXPOSE 8081
 # dotnet-coverage перехватывает SIGTERM, ждёт завершения дочернего процесса, затем сбрасывает отчёт
 STOPSIGNAL SIGTERM
 
-ENTRYPOINT ["dotnet-coverage", "collect", "dotnet", "CartService.Web.dll", "--output", "/coverage/coverage.cart.cobertura.xml", "--output-format", "cobertura"]
+ENTRYPOINT ["dotnet-coverage", "collect", "--output", "/coverage/coverage.cart.cobertura.xml", "--output-format", "cobertura", "--", "dotnet", "CartService.Web.dll"]
