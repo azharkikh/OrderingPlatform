@@ -1,0 +1,60 @@
+name: Integration Tests + Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start services
+        run: docker compose up --build -d
+
+      - name: Wait for services to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/Orders > /dev/null 2>&1 && \
+               curl -sf http://localhost:8081/Cart > /dev/null 2>&1; then
+              echo "Services are ready"
+              exit 0
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 1
+          done
+          echo "Services did not start in time"
+          exit 1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run integration tests
+        run: dotnet test tests/IntegrationTests/IntegrationTests.csproj --logger "trx;LogFileName=results.trx"
+
+      - name: Stop services (triggers coverage flush)
+        if: always()
+        run: docker compose down --timeout 30
+
+      - name: Install dotnet-coverage
+        run: dotnet tool install --global dotnet-coverage
+
+      - name: Merge coverage reports
+        run: |
+          dotnet-coverage merge \
+            coverage-out/coverage.order.cobertura.xml \
+            coverage-out/coverage.cart.cobertura.xml \
+            --output coverage-out/coverage.merged.cobertura.xml \
+            --output-format cobertura
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-out/coverage.merged.cobertura.xml

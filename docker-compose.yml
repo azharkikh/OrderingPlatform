@@ -1,0 +1,22 @@
+services:
+  order:
+    build:
+      context: .
+      dockerfile: Dockerfile.order
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./coverage-out:/coverage
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+
+  cart:
+    build:
+      context: .
+      dockerfile: Dockerfile.cart
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./coverage-out:/coverage
+    stop_signal: SIGTERM
+    stop_grace_period: 30s

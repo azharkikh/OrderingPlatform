@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/root/">
+    <File Path="Dockerfile.order" />
+    <File Path="Dockerfile.cart" />
+    <File Path="docker-compose.yml" />
+    <File Path=".dockerignore" />
+    <File Path=".gitignore" />
+  </Folder>
+  <Folder Name="/root/src/" />
+  <Folder Name="/root/src/Cart/">
+    <Project Path="src/CartService.Web/CartService.Web.csproj" />
+  </Folder>
+  <Folder Name="/root/src/OrderService/">
+    <Project Path="src/OrderService.Web/OrderService.Web.csproj" />
+  </Folder>
+  <Folder Name="/root/tests/">
+    <Project Path="tests/IntegrationTests/IntegrationTests.csproj" />
+  </Folder>
+  <LaunchProfile Name="http">
+    <StartupProject Path="src/OrderService.Web/OrderService.Web.csproj" LaunchProfile="http" />
+    <StartupProject Path="src/CartService.Web/CartService.Web.csproj" LaunchProfile="http" />
+  </LaunchProfile>
+</Solution>

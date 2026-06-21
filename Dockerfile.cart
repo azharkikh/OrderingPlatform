@@ -1,0 +1,37 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["src/CartService.Web/CartService.Web.csproj", "src/CartService.Web/"]
+RUN dotnet restore "./src/CartService.Web/CartService.Web.csproj"
+COPY . .
+WORKDIR "/src/src/CartService.Web"
+RUN dotnet build "./CartService.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+# Publish stage
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./CartService.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+# Final stage — SDK образ нужен для dotnet-coverage (global tool + dotnet driver)
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS final
+WORKDIR /app
+
+# libxml2 требуется нативному профайлеру dotnet-coverage
+RUN apt-get update && apt-get install -y --no-install-recommends libxml2 && rm -rf /var/lib/apt/lists/*
+
+# dotnet-coverage использует CLR Profiler API — не зависит от PDB, корректно обрабатывает SIGTERM
+RUN dotnet tool install --global dotnet-coverage
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+RUN mkdir -p /coverage
+
+COPY --from=publish /app/publish .
+
+ENV ASPNETCORE_HTTP_PORTS=8081
+EXPOSE 8081
+
+# dotnet-coverage перехватывает SIGTERM, ждёт завершения дочернего процесса, затем сбрасывает отчёт
+STOPSIGNAL SIGTERM
+
+ENTRYPOINT ["dotnet-coverage", "collect", "dotnet", "CartService.Web.dll", "--output", "/coverage/coverage.cart.cobertura.xml", "--output-format", "cobertura"]

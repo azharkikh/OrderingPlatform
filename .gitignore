@@ -1,0 +1,16 @@
+## .NET
+bin/
+obj/
+*.user
+
+## Visual Studio
+.vs/
+*.suo
+*.userprefs
+
+## Coverage output
+coverage-out/
+
+## OS
+.DS_Store
+Thumbs.db
