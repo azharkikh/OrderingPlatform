@@ -10,6 +10,6 @@ public class CartController : ControllerBase
     [HttpGet(Name = "GetCartLines")]
     public IEnumerable<CartLine> Get()
     {
-        return [new CartLine("Margarita 30 cm"), new CartLine("Dodster gas")];
+        return [new CartLine("Margarita 30 cm"), new CartLine("Coca-cola 0.5")];
     }
 }
