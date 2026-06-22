@@ -15,6 +15,7 @@
   </Folder>
   <Folder Name="/root/tests/">
     <Project Path="tests/IntegrationTests/IntegrationTests.csproj" />
+    <Project Path="tests/UnitTests/UnitTests.csproj" />
   </Folder>
   <LaunchProfile Name="http">
     <StartupProject Path="src/OrderService.Web/OrderService.Web.csproj" LaunchProfile="http" />
