@@ -48,6 +48,7 @@ jobs:
             sleep 1
           done
           echo "Services did not start in time"
+          docker compose logs
           exit 1
 
       - uses: actions/setup-dotnet@v4
