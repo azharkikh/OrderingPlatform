@@ -18,13 +18,18 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Run unit tests
-        run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage-out/unit
+        run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage-raw
+
+      - name: Stage unit coverage report
+        run: |
+          mkdir -p coverage
+          cp "$(find coverage-raw -name 'coverage.cobertura.xml' | head -1)" coverage/unit.xml
 
       - name: Upload unit coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-unit-tests
-          path: coverage-out/unit
+          name: coverage-unit
+          path: coverage/unit.xml
           retention-days: 1
 
   integration-tests:
@@ -71,16 +76,20 @@ jobs:
       - name: Fix coverage-out permissions
         run: sudo chown -R $(id -u):$(id -g) coverage-out/
 
+      - name: Stage integration coverage reports
+        run: |
+          mkdir -p coverage
+          cp coverage-out/coverage.order.cobertura.xml coverage/order.xml
+          cp coverage-out/coverage.cart.cobertura.xml coverage/cart.xml
+
       - name: Upload integration coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-integration-tests
-          path: |
-            coverage-out/coverage.order.cobertura.xml
-            coverage-out/coverage.cart.cobertura.xml
+          name: coverage-integration
+          path: coverage/*.xml
           retention-days: 1
 
-  merge-coverage:
+  coverage-report:
     needs: [unit-tests, integration-tests]
     runs-on: ubuntu-latest
 
@@ -89,33 +98,29 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Download unit coverage
+      - name: Download all coverage reports into one directory
         uses: actions/download-artifact@v4
         with:
-          name: coverage-unit-tests
-          path: coverage-out/unit
+          pattern: coverage-*
+          path: coverage
+          merge-multiple: true
 
-      - name: Download integration coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-integration-tests
-          path: coverage-out/integration
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
-      - name: Install dotnet-coverage
-        run: dotnet tool install --global dotnet-coverage
-
-      - name: Merge all coverage reports
+      - name: Generate HTML report and GitHub summary
         run: |
-          UNIT_COV=$(find coverage-out/unit -name "coverage.cobertura.xml" | head -1)
-          dotnet-coverage merge \
-            "$UNIT_COV" \
-            coverage-out/integration/coverage.order.cobertura.xml \
-            coverage-out/integration/coverage.cart.cobertura.xml \
-            --output coverage-out/coverage.merged.cobertura.xml \
-            --output-format cobertura
+          reportgenerator \
+            -reports:"coverage/*.xml" \
+            -targetdir:"coverage-report" \
+            -reporttypes:"Html;MarkdownSummaryGithub"
 
-      - name: Upload merged coverage report
+      - name: Publish coverage summary to job summary
+        run: cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: coverage-out/coverage.merged.cobertura.xml
+          name: coverage-report-html
+          path: coverage-report
+          retention-days: 7
