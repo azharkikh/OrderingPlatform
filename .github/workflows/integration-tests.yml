@@ -17,13 +17,17 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Run unit tests
-        run: dotnet test tests/UnitTests/UnitTests.csproj --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage-raw
+      - name: Install dotnet-coverage
+        run: dotnet tool install --global dotnet-coverage
 
-      - name: Stage unit coverage report
+      - name: Run unit tests with coverage
         run: |
           mkdir -p coverage
-          cp "$(find coverage-raw -name 'coverage.cobertura.xml' | head -1)" coverage/unit.xml
+          dotnet-coverage collect \
+            --settings coverage.settings.xml \
+            --output coverage/unit.xml \
+            --output-format cobertura \
+            -- dotnet test tests/UnitTests/UnitTests.csproj -c Release
 
       - name: Upload unit coverage artifact
         uses: actions/upload-artifact@v4

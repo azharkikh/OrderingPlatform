@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Настройки dotnet-coverage. Исключаем из покрытия сгенерированный код
-     (атрибуты GeneratedCode / CompilerGenerated) - тот же подход, что и в
-     coverlet.runsettings для unit-тестов. -->
+<!-- Настройки dotnet-coverage. Измеряем только сборки сервисов (*.Web.dll) -
+     это исключает тестовую сборку и фреймворки. Плюс убираем сгенерированный
+     код (атрибуты GeneratedCode / CompilerGenerated). -->
 <RunSettings>
   <DataCollectionRunSettings>
     <DataCollectors>
       <DataCollector friendlyName="Code Coverage">
         <Configuration>
           <CodeCoverage>
+            <ModulePaths>
+              <Include>
+                <ModulePath>.*\.Web\.dll$</ModulePath>
+              </Include>
+            </ModulePaths>
             <Attributes>
               <Exclude>
                 <Attribute>^System\.CodeDom\.Compiler\.GeneratedCodeAttribute$</Attribute>
