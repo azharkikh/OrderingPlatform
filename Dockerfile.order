@@ -34,4 +34,4 @@ EXPOSE 8080
 # dotnet-coverage перехватывает SIGTERM, ждёт завершения дочернего процесса, затем сбрасывает отчёт
 STOPSIGNAL SIGTERM
 
-ENTRYPOINT ["dotnet-coverage", "collect", "--session-id", "order-session", "--output", "/coverage/coverage.order.cobertura.xml", "--output-format", "cobertura", "--exclude-by-attribute", "GeneratedCodeAttribute,CompilerGeneratedAttribute", "--exclude", "**/*.g.cs", "--", "dotnet", "OrderService.Web.dll"]
+ENTRYPOINT ["dotnet-coverage", "collect", "--session-id", "order-session", "--output", "/coverage/coverage.order.cobertura.xml", "--output-format", "cobertura", "--", "dotnet", "OrderService.Web.dll"]
