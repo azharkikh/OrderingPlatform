@@ -27,6 +27,7 @@ ENV PATH="$PATH:/root/.dotnet/tools"
 RUN mkdir -p /coverage
 
 COPY --from=publish /app/publish .
+COPY coverage.settings.xml /app/coverage.settings.xml
 
 ENV ASPNETCORE_HTTP_PORTS=8081
 EXPOSE 8081
@@ -34,4 +35,4 @@ EXPOSE 8081
 # dotnet-coverage перехватывает SIGTERM, ждёт завершения дочернего процесса, затем сбрасывает отчёт
 STOPSIGNAL SIGTERM
 
-ENTRYPOINT ["dotnet-coverage", "collect", "--session-id", "cart-session", "--output", "/coverage/coverage.cart.cobertura.xml", "--output-format", "cobertura", "--", "dotnet", "CartService.Web.dll"]
+ENTRYPOINT ["dotnet-coverage", "collect", "--settings", "/app/coverage.settings.xml", "--session-id", "cart-session", "--output", "/coverage/coverage.cart.cobertura.xml", "--output-format", "cobertura", "--", "dotnet", "CartService.Web.dll"]
