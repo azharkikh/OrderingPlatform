@@ -1,0 +1,32 @@
+flowchart TD
+    trigger([push / PR to master]) --> unit
+    trigger --> integ
+
+    subgraph unit[unit-tests job]
+        u1[checkout + setup-dotnet 10] --> u2[install dotnet-coverage]
+        u2 --> u3[collect -- dotnet test UnitTests]
+        u3 --> u4[upload coverage-unit / unit.xml]
+    end
+
+    subgraph integ[integration-tests job]
+        i1[docker compose up --build -d] --> i2{services healthy?\ncurl /Orders /Cart}
+        i2 --> i3[dotnet test IntegrationTests NUnit HTTP]
+        i3 --> i4[dotnet-coverage shutdown\norder-session / cart-session]
+        i4 --> i5[compose down -> flush cobertura]
+        i5 --> i6[stage order.xml + cart.xml]
+        i6 --> i7[upload coverage-integration]
+    end
+
+    subgraph cont[inside each container]
+        c1[PID1 dotnet-coverage collect] -->|spawns| c2[dotnet *.Web.dll]
+        c3[CLR Profiler API] -.-> c1
+        c2 -->|volume| c4[/coverage -> ./coverage-out/]
+    end
+    i1 -. starts .-> c1
+    i4 -. shutdown .-> c1
+
+    u4 --> report
+    i7 --> report
+    subgraph report[coverage-report job]
+        r1[download coverage-*] --> r2[ReportGenerator merge\nunit+order+cart] --> r3[HTML + GitHub summary]
+    end
